@@ -57,7 +57,7 @@ public class NoticeService {
 	public PageData selectAllNotice(int currentPage) {
 		Connection conn = JDBCTemplate.getConnection();
 		List<Notice> nList = nDao.selectAllNotice(conn, currentPage);
-		String pageNavigator = nDao.generatePageNavi(currentPage);
+		String pageNavigator = nDao.generatePageNavi(conn, currentPage);
 		PageData pd = new PageData();
 		pd.setnList(nList);
 		pd.setPageNavigator(pageNavigator);

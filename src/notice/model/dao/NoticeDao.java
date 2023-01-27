@@ -97,8 +97,8 @@ public class NoticeDao {
 	}
 
 	//페이지 네비게이터 만드는 메소드
-	public String generatePageNavi(int currentPage) {
-		int totalCount = 32;
+	public String generatePageNavi(Connection conn, int currentPage) {
+		int totalCount = getRecordTotalCount(conn);
 		int recordCountPerPage = 10;
 		int naviTotalCount = 0;
 		if( totalCount % recordCountPerPage > 0) {
@@ -117,6 +117,22 @@ public class NoticeDao {
 			sb.append("<a href='/notice/list?page="+i+"'>"+i+"</a>");	
 		}
 		return sb.toString();
+	}
+	
+	//페이지 전체 게시물 가져오는 메소드
+	public int getRecordTotalCount(Connection conn) {
+		String query = "SELECT COUNT(*) AS TOTALCOUNT FROM NOTICE_TBL";
+		int recordTotalCount = 0;
+		try {
+			Statement stmt = conn.createStatement();
+			ResultSet rset = stmt.executeQuery(query);
+			if(rset.next()) {
+				recordTotalCount = rset.getInt("TOTALCOUNT");
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return recordTotalCount;
 	}
 	
 	/**
