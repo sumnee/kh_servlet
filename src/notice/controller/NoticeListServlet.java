@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import notice.model.service.NoticeService;
 import notice.model.vo.Notice;
+import notice.model.vo.PageData;
 
 /**
  * Servlet implementation class NoticeListServlet
@@ -29,11 +30,26 @@ public class NoticeListServlet extends HttpServlet {
 
 	/**
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
+	 * -페이징 처리하기 위해
+	 * 1. 전체 게시물의 갯수 알기
+	 * 2. 쿼리문이 변경되어야 함
+	 * 	-현재 페이지 넘버에 의해 변경되어야 함
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		NoticeService nService = new NoticeService();
-		List<Notice> nList = nService.selectAllNotice();
+		int currentPage = 1;
+		if(request.getParameter("page") != null ) {
+			currentPage = Integer.parseInt(request.getParameter("page"));
+		}
+//		이것도 가넝
+//		String strCurr = request.getParameter("page") != null ? request.getParameter("page") : "1";
+//		int currentPage = Integer.parseInt(strCurr);
+		
+		PageData pd = nService.selectAllNotice(currentPage);
+		List<Notice> nList = pd.getnList();
+		String pageNavigator = pd.getPageNavigator();
 		request.setAttribute("nList", nList);
+		request.setAttribute("pageNavi", pageNavigator);
 		request.getRequestDispatcher("/WEB-INF/views/notice/list.jsp").forward(request, response);
 	}
 

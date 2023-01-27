@@ -8,6 +8,7 @@ import javax.swing.JScrollBar;
 import common.JDBCTemplate;
 import notice.model.dao.NoticeDao;
 import notice.model.vo.Notice;
+import notice.model.vo.PageData;
 
 public class NoticeService {
 	
@@ -53,10 +54,15 @@ public class NoticeService {
 	 * 공지사항 목록 조회 service
 	 * @return nList
 	 */
-	public List<Notice> selectAllNotice() {
+	public PageData selectAllNotice(int currentPage) {
 		Connection conn = JDBCTemplate.getConnection();
-		List<Notice> nList = nDao.selectAllNotice(conn);
-		return nList;
+		List<Notice> nList = nDao.selectAllNotice(conn, currentPage);
+		String pageNavigator = nDao.generatePageNavi(currentPage);
+		PageData pd = new PageData();
+		pd.setnList(nList);
+		pd.setPageNavigator(pageNavigator);
+		//둘다 리턴하기 위해 pd 사용
+		return pd;
 	}
 
 	/**
@@ -68,6 +74,22 @@ public class NoticeService {
 		Connection conn = JDBCTemplate.getConnection();
 		Notice notice = nDao.selectOneByNo(conn, noticeNo);
 		return notice;
+	}
+
+	/**
+	 * 공지사항 수정 service
+	 * @param notice
+	 * @return result
+	 */
+	public int updateNotice(Notice notice) {
+		Connection conn = JDBCTemplate.getConnection();
+		int result = nDao.updateNotice(conn, notice);
+		if(result > 0) {
+			JDBCTemplate.commit(conn);
+		} else {
+			JDBCTemplate.rollback(conn);
+		}
+		return result;
 	}
 
 }

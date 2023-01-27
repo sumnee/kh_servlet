@@ -37,6 +37,11 @@
                         <td style="text-align: center;">${notice.viewCount }</td>
                     </tr>
                 </c:forEach>
+                <tr>
+                    <td colspan="5" align="center">
+                    	${pageNavi }
+                    </td>
+                </tr>
             </tbody>
         </table>
     </body>

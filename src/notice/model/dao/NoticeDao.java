@@ -61,12 +61,20 @@ public class NoticeDao {
 	 * @param conn
 	 * @return nList
 	 */
-	public List<Notice> selectAllNotice(Connection conn) {
-		String sql = "SELECT * FROM NOTICE_TBL";
+	public List<Notice> selectAllNotice(Connection conn, int currentPage) {
+		String sql = "SELECT * FROM (SELECT ROW_NUMBER() OVER(ORDER BY NOTICE_NO DESC) AS NUM, NOTICE_TBL.* FROM NOTICE_TBL) WHERE NUM BETWEEN ? AND ?";
 		List<Notice> nList = null;
+		int recordCountPerPage = 10;
+		//currentPage = 1 , recordCountPerPage = 10, start = 1, end = 10
+		//currentPage = 2 , recordCountPerPage = 10, start = 11, end = 20
+		//규칙 찾아서 수식 만들어 넣음
+		int start = currentPage*recordCountPerPage - (recordCountPerPage - 1);
+		int end = currentPage*recordCountPerPage;
 		try {
-			Statement stmt = conn.createStatement();
-			ResultSet rset = stmt.executeQuery(sql);
+			PreparedStatement pstmt = conn.prepareStatement(sql);
+			pstmt.setInt(1, start);
+			pstmt.setInt(2, end);
+			ResultSet rset = pstmt.executeQuery();
 			
 			nList = new ArrayList<Notice>();
 			while(rset.next()) {
@@ -81,13 +89,36 @@ public class NoticeDao {
 				nList.add(notice); //이거 없어서 오류남! 잘적기...
 			}
 			rset.close();
-			stmt.close();
+			pstmt.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 		return nList;
 	}
 
+	//페이지 네비게이터 만드는 메소드
+	public String generatePageNavi(int currentPage) {
+		int totalCount = 32;
+		int recordCountPerPage = 10;
+		int naviTotalCount = 0;
+		if( totalCount % recordCountPerPage > 0) {
+			naviTotalCount = (totalCount / recordCountPerPage) + 1;
+		} else {
+			naviTotalCount = totalCount / recordCountPerPage;
+		}
+		int naviCountPerPage = 5;
+		int startNavi = ((currentPage - 1) / naviCountPerPage) * naviCountPerPage +1;
+		int endNavi = startNavi + naviCountPerPage - 1;
+		if(endNavi > naviTotalCount) {
+			endNavi = naviTotalCount;
+		}
+		StringBuilder sb = new StringBuilder();
+		for(int i = startNavi; i <= endNavi; i++) {
+			sb.append("<a href='/notice/list?page="+i+"'>"+i+"</a>");	
+		}
+		return sb.toString();
+	}
+	
 	/**
 	 * 공지사항 상세 조회 dao
 	 * @param conn
@@ -117,6 +148,29 @@ public class NoticeDao {
 			e.printStackTrace();
 		}
 		return notice;
+	}
+
+	/**
+	 * 공지사항 수정 dao
+	 * @param conn
+	 * @param notice
+	 * @return result
+	 */
+	public int updateNotice(Connection conn, Notice notice) {
+		String query = "UPDATE NOTICE_TBL SET NOTICE_SUBJECT = ?, NOTICE_CONTENT = ? WHERE NOTICE_NO = ?";
+		int result = 0;
+		try {
+			PreparedStatement pstmt = conn.prepareStatement(query);
+			pstmt.setString(1, notice.getNoticeSubject());
+			pstmt.setString(2, notice.getNoticeContent());
+			pstmt.setInt(3, notice.getNoticeNo());
+			result = pstmt.executeUpdate();
+			
+			pstmt.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return result;
 	}
 	
 	
